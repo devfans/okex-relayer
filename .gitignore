@@ -4,4 +4,6 @@ db.bin
 .idea
 run_cosmos_relayer
 test.go
-conf-debug.json
+conf*.json
+.vscode
+log/*.log
