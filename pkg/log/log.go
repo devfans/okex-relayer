@@ -1,21 +1,3 @@
-/*
- * Copyright (C) 2018 The ontology Authors
- * This file is part of The ontology library.
- *
- * The ontology is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * The ontology is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public License
- * along with The ontology.  If not, see <http://www.gnu.org/licenses/>.
- */
-
 package log
 
 import (
@@ -30,6 +12,7 @@ import (
 	"runtime"
 	"strconv"
 	"strings"
+	"time"
 )
 
 const (
@@ -72,7 +55,7 @@ const (
 	CALL_DEPTH           = 2
 	DEFAULT_MAX_LOG_SIZE = 20
 	BYTE_TO_MB           = 1024 * 1024
-	PATH                 = "./btc_relayer_log/"
+	PATH                 = "./logoutput/"
 )
 
 func GetGID() uint64 {
@@ -292,6 +275,7 @@ func Error(a ...interface{}) {
 
 func Fatal(a ...interface{}) {
 	Log.Fatal(a...)
+	os.Exit(1)
 }
 
 func Infof(format string, a ...interface{}) {
@@ -308,10 +292,25 @@ func Errorf(format string, a ...interface{}) {
 
 func Fatalf(format string, a ...interface{}) {
 	Log.Fatalf(format, a...)
+	os.Exit(1)
 }
 
 func FileOpen(path string) (*os.File, error) {
-	logfile, err := os.OpenFile(path, os.O_RDWR|os.O_CREATE, 0666)
+	if fi, err := os.Stat(path); err == nil {
+		if !fi.IsDir() {
+			return nil, fmt.Errorf("open %s: not a directory", path)
+		}
+	} else if os.IsNotExist(err) {
+		if err := os.MkdirAll(path, 0766); err != nil {
+			return nil, err
+		}
+	} else {
+		return nil, err
+	}
+
+	var currenttime = time.Now().Format("2006-01-02_15.04.05")
+
+	logfile, err := os.OpenFile(path+currenttime+"_LOG.log", os.O_RDWR|os.O_CREATE, 0666)
 	if err != nil {
 		return nil, err
 	}
@@ -336,7 +335,7 @@ func InitLog(logLevel int, a ...interface{}) {
 			case string:
 				logFile, err = FileOpen(o.(string))
 				if err != nil {
-					fmt.Printf("error: open log file failed: %v\n", err)
+					fmt.Println("error: open log file failed")
 					os.Exit(1)
 				}
 				writers = append(writers, logFile)
