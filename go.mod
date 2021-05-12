@@ -5,11 +5,16 @@ go 1.15
 require (
 	github.com/boltdb/bolt v1.3.1
 	github.com/btcsuite/btcd v0.21.0-beta
+	github.com/cosmos/cosmos-sdk v0.39.2
 	github.com/ethereum/go-ethereum v1.9.25
+	github.com/gogo/protobuf v1.3.1
+	github.com/okex/exchain v0.18.2
 	github.com/okex/exchain-go-sdk v0.18.1
+	github.com/ontio/ontology v1.11.1-0.20200812075204-26cf1fa5dd47
 	github.com/ontio/ontology-crypto v1.0.9
 	github.com/polynetwork/poly v1.4.0
 	github.com/polynetwork/poly-go-sdk v0.0.0-20200730112529-d9c0c7ddf3d8
+	github.com/tendermint/tendermint v0.33.9
 	poly_bridge_sdk v0.0.0-00010101000000-000000000000
 )
 

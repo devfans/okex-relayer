@@ -25,7 +25,6 @@ import (
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
-	oksdk "github.com/okex/exchain-go-sdk"
 	"github.com/polynetwork/okex-relayer/config"
 	"github.com/polynetwork/okex-relayer/pkg/db"
 	"github.com/polynetwork/okex-relayer/pkg/eccd_abi"
@@ -41,7 +40,6 @@ type Poly struct {
 	conf             *config.Config
 	polySdk          *sdk.PolySdk
 	ethClients       []*ethclient.Client
-	tmClients        []*oksdk.Client
 	bridgeSdk        *poly_bridge_sdk.BridgeFeeCheck
 	contractAbi      *abi.ABI
 	ks               *tools.EthKeyStore
@@ -52,7 +50,7 @@ type Poly struct {
 }
 
 // NewPoly ...
-func NewPoly(conf *config.Config, polyHeight uint32, polySdk *sdk.PolySdk, ethClients []*ethclient.Client, tmClients []*oksdk.Client, ks *tools.EthKeyStore, db *db.BoltDB, bridgeSdk *poly_bridge_sdk.BridgeFeeCheck) *Poly {
+func NewPoly(conf *config.Config, syncedPolyHeight uint32, polySdk *sdk.PolySdk, ethClients []*ethclient.Client, ks *tools.EthKeyStore, db *db.BoltDB, bridgeSdk *poly_bridge_sdk.BridgeFeeCheck) *Poly {
 	contractAbi, err := abi.JSON(strings.NewReader(eccm_abi.EthCrossChainManagerABI))
 	if err != nil {
 		log.Fatalf("abi.JSON failed:%v", err)
@@ -60,14 +58,13 @@ func NewPoly(conf *config.Config, polyHeight uint32, polySdk *sdk.PolySdk, ethCl
 
 	return &Poly{
 		conf:             conf,
-		syncedPolyHeight: polyHeight,
+		syncedPolyHeight: syncedPolyHeight,
 		contractAbi:      &contractAbi,
 		ks:               ks,
 		db:               db,
 		polySdk:          polySdk,
 		ethClients:       ethClients,
 		bridgeSdk:        bridgeSdk,
-		tmClients:        tmClients,
 	}
 }
 

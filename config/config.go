@@ -3,6 +3,7 @@ package config
 import (
 	"encoding/json"
 	"io/ioutil"
+	"math/rand"
 )
 
 const (
@@ -26,7 +27,11 @@ type OKConfig struct {
 	ECCDContractAddress string
 	KeyStorePath        string
 	KeyStorePwdSet      map[string]string
-	BlockConfig         uint64
+	BlockConfig         int64
+}
+
+func (ok *OKConfig) RandRestURL() string {
+	return ok.RestURL[int(rand.Uint32())%len(ok.RestURL)]
 }
 
 // Config ...

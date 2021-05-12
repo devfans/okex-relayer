@@ -4,6 +4,9 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"os"
+	"os/signal"
+	"syscall"
 	"time"
 
 	"poly_bridge_sdk"
@@ -19,13 +22,13 @@ import (
 )
 
 var confFile string
-var okHeight int64
-var polyHeight int64
+var syncedOKHeight int64
+var syncedPolyHeight int64
 
 func init() {
 	flag.StringVar(&confFile, "conf", "./config.json", "configuration file path")
-	flag.Int64Var(&okHeight, "ok", 0, "specify ok height")
-	flag.Int64Var(&polyHeight, "poly", 0, "specify poly height")
+	flag.Int64Var(&syncedOKHeight, "ok", 0, "specify ok height")
+	flag.Int64Var(&syncedPolyHeight, "poly", 0, "specify poly height")
 
 	flag.Parse()
 }
@@ -109,5 +112,29 @@ func main() {
 
 	bridgeSdk := poly_bridge_sdk.NewBridgeFeeCheck(conf.BridgeConfig.RestURL, 5)
 
-	polyMgr := manager.NewPoly(polySdk, ethClients, tmClients, ks, bridgeSdk)
+	polyMgr := manager.NewPoly(conf, uint32(syncedPolyHeight), polySdk, ethClients, ks, boltDB, bridgeSdk)
+
+	okMgr := manager.NewOKEx(conf, syncedOKHeight, signer, polySdk, ethClients, tmClients, boltDB)
+
+	go polyMgr.MonitorChain()
+
+	go okMgr.MonitorChain()
+	go okMgr.MonitorDeposit()
+	go okMgr.CheckDeposit()
+
+	waitToExit()
+}
+
+func waitToExit() {
+	exit := make(chan bool, 0)
+	sc := make(chan os.Signal, 1)
+	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP)
+	go func() {
+		for sig := range sc {
+			log.Infof("waitToExit - BSC relayer received exit signal:%v.", sig.String())
+			close(exit)
+			break
+		}
+	}()
+	<-exit
 }
