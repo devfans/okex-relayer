@@ -7,3 +7,4 @@ test.go
 conf*.json
 .vscode
 log/*.log
+db
