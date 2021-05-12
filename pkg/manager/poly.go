@@ -81,21 +81,6 @@ func (p *Poly) findLatestHeight() uint32 {
 }
 
 func (p *Poly) init() {
-	if p.syncedPolyHeight > 0 {
-		log.Infof("PolyManager init - start height from flag: %d", p.syncedPolyHeight)
-		return
-	}
-
-	p.syncedPolyHeight = p.db.GetPolyHeight()
-	latestHeight := p.findLatestHeight()
-	if latestHeight > p.syncedPolyHeight {
-		p.syncedPolyHeight = latestHeight
-		log.Infof("PolyManager init - synced height from ECCM: %d", p.syncedPolyHeight)
-		return
-	}
-
-	log.Infof("PolyManager init - synced height from DB: %d", p.syncedPolyHeight)
-
 	address := ethcommon.HexToAddress(p.conf.OKConfig.ECCDContractAddress)
 	instance, err := eccd_abi.NewEthCrossChainData(address, p.ethClients[0])
 	if err != nil {
@@ -112,6 +97,22 @@ func (p *Poly) init() {
 	}
 
 	p.accountCh = accountCh
+
+	if p.syncedPolyHeight > 0 {
+		log.Infof("PolyManager init - start height from flag: %d", p.syncedPolyHeight)
+		return
+	}
+
+	p.syncedPolyHeight = p.db.GetPolyHeight()
+	latestHeight := p.findLatestHeight()
+	if latestHeight > p.syncedPolyHeight {
+		p.syncedPolyHeight = latestHeight
+		log.Infof("PolyManager init - synced height from ECCM: %d", p.syncedPolyHeight)
+		return
+	}
+
+	log.Infof("PolyManager init - synced height from DB: %d", p.syncedPolyHeight)
+
 }
 
 func (p *Poly) MonitorChain() {

@@ -55,7 +55,7 @@ func setUpOkClientAndKeyStore(okConfig *config.OKConfig) ([]*ethclient.Client, [
 	}
 
 	var tmClients []*oksdk.Client
-	for _, tmNode := range okConfig.RestURL {
+	for _, tmNode := range okConfig.RestURLTM {
 		config, _ := oksdk.NewClientConfig(tmNode, "okexchain-65", oksdk.BroadcastBlock, "0.01okt", 200000, 0, "")
 		client := oksdk.NewClient(config)
 
