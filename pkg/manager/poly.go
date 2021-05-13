@@ -463,13 +463,13 @@ func (p *Poly) commitDepositEventsWithHeader(account accounts.Account, header *p
 	timerCtx, cancelFunc := context.WithTimeout(context.Background(), time.Second*20)
 	defer cancelFunc()
 
-	if err = ethClient.SendTransaction(timerCtx, signedtx); err != nil {
+	txhash, err := ethClient.SendOKTransaction(timerCtx, signedtx)
+	if err != nil {
 		log.Errorf("commitHeader - send transaction error:%v", err)
 		return false
 	}
 
 	hash := header.Hash()
-	txhash := signedtx.Hash()
 
 	isSuccess := p.waitTransactionConfirm(ethClient, txhash)
 
