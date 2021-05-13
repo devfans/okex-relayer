@@ -155,12 +155,17 @@ func (ok *OK) MonitorChain() {
 			continue
 		}
 
+		count := 0
 		for ok.syncedOKHeight < latestheight-ok.conf.OKConfig.BlockConfig {
 			log.Infof("OKManager MonitorChain handleNewBlock %d", ok.syncedOKHeight+1)
 			if !ok.handleNewBlock(ok.syncedOKHeight + 1) {
 				break
 			}
 			atomic.AddInt64(&ok.syncedOKHeight, 1)
+			count++
+			if count > 100 {
+				break
+			}
 		}
 
 		ok.db.UpdateOKHeight(ok.syncedOKHeight)
@@ -459,7 +464,7 @@ func (ok *OK) handleLockDepositEvents(refHeight int64) error {
 
 		err = prt.VerifyValue(&mproof, cr.AppHash, keyPath, ethcrypto.Keccak256(crosstx.value))
 		if err != nil {
-			log.Fatalf("VerifyValue error: %v proof_height:%d commit_height:%d", err, height, cr.Header.Height)
+			log.Fatalf("VerifyValue error: %v proof_height:%d commit_height:%d keyPath:%s", err, height, cr.Header.Height, keyPath)
 		}
 
 		txData, _ := ok.cdc.MarshalBinaryBare(&okex.CosmosProofValue{Kp: keyPath, Value: crosstx.value})
