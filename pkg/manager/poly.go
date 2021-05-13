@@ -363,13 +363,13 @@ func (p *Poly) commitHeader(header *polytypes.Header, pubkList []byte) bool {
 		log.Errorf("commitHeader - sign raw tx error: %v", err)
 		return false
 	}
-	if err = ethClient.SendTransaction(context.Background(), signedtx); err != nil {
+	txhash, err := ethClient.SendOKTransaction(context.Background(), signedtx)
+	if err != nil {
 		log.Errorf("commitHeader - send transaction error:%", err)
 		return false
 	}
 
 	hash := header.Hash()
-	txhash := signedtx.Hash()
 
 	isSuccess := p.waitTransactionConfirm(ethClient, txhash)
 

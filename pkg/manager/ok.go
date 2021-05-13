@@ -106,6 +106,7 @@ func NewOKEx(conf *config.Config, syncedOKHeight int64, polySigner *sdk.Account,
 		conf:           conf,
 		syncedOKHeight: syncedOKHeight,
 		polySdk:        polySdk,
+		polySigner:     polySigner,
 		ethClients:     ethClients,
 		tmClients:      tmClients,
 		db:             db,
@@ -141,6 +142,7 @@ func (ok *OK) MonitorChain() {
 		latestheightU64, err := ethClient.BlockNumber(context.Background())
 		if err != nil {
 			log.Errorf("OKManager MonitorChain - cannot get node height, err: %v", err)
+			time.Sleep(time.Second)
 			continue
 		}
 
@@ -224,8 +226,11 @@ func (ok *OK) handleBlockHeader(height int64) bool {
 		}
 
 		if !waitPolyTxConfirm(txhash.ToHexString(), ok.polySdk) {
+			log.Errorf("handleBlockHeader - SyncBlockHeader on height :%d txhash :%s failed", height, txhash.ToHexString(), err)
 			return false
 		}
+
+		log.Infof("handleBlockHeader - synced new block on height %d", height)
 	}
 	return true
 }
