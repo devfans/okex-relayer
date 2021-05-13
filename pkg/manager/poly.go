@@ -412,7 +412,7 @@ func (p *Poly) commitDepositEventsWithHeader(account accounts.Account, header *p
 	copy(fromTx[:], param.TxHash[:32])
 	res, _ := p.eccdInstance.CheckIfFromChainTxExist(nil, param.FromChainID, fromTx)
 	if res {
-		log.Infof("already relayed to eth: ( from_chain_id: %d, from_txhash: %x,  param.Txhash: %x)",
+		log.Infof("already relayed to ok: ( from_chain_id: %d, from_txhash: %x,  param.Txhash: %x)",
 			param.FromChainID, param.TxHash, param.MakeTxParam.TxHash)
 		return true
 	}

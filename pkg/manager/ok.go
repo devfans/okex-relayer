@@ -421,7 +421,7 @@ func (ok *OK) handleLockDepositEvents(refHeight int64) error {
 		keyPath := "/"
 		for i := range mproof.Ops {
 			op := mproof.Ops[len(mproof.Ops)-1-i]
-			keyPath += string(op.Key)
+			keyPath += "x:" + hex.EncodeToString(op.Key)
 			keyPath += "/"
 		}
 
@@ -452,8 +452,6 @@ func (ok *OK) handleLockDepositEvents(refHeight int64) error {
 
 		//3. commit proof to poly
 
-		storageProof, _ := ok.cdc.MarshalBinaryBare(mproof)
-
 		if !bytes.Equal(okProof.StorageProofs[0].Value.ToInt().Bytes(), crypto.Keccak256(crosstx.value)) {
 			panic("Keccak256 not match")
 		} else {
@@ -464,9 +462,10 @@ func (ok *OK) handleLockDepositEvents(refHeight int64) error {
 
 		err = prt.VerifyValue(&mproof, cr.AppHash, keyPath, ethcrypto.Keccak256(crosstx.value))
 		if err != nil {
-			log.Fatalf("VerifyValue error: %v proof_height:%d commit_height:%d keyPath:%s", err, height, cr.Header.Height, keyPath)
+			log.Fatalf("VerifyValue error: %v proof_height:%d commit_height:%d keyPath:%s cross_height:%d", err, height, cr.Header.Height, keyPath, crosstx.height)
 		}
 
+		storageProof, _ := ok.cdc.MarshalBinaryBare(mproof)
 		txData, _ := ok.cdc.MarshalBinaryBare(&okex.CosmosProofValue{Kp: keyPath, Value: crosstx.value})
 		txHash, err := ok.polySdk.Native.Ccm.ImportOuterTransfer(ok.conf.OKConfig.SideChainId, txData, uint32(height+1), storageProof, ok.polySigner.Address[:], raw, ok.polySigner)
 		if err != nil {
