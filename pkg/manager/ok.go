@@ -12,15 +12,15 @@ import (
 	"time"
 
 	amcodec "github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/store/rootmulti"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
+	"github.com/ethereum/go-ethereum/crypto"
+	ethcrypto "github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
 	proto "github.com/gogo/protobuf/proto"
 	oksdk "github.com/okex/exchain-go-sdk"
-	"github.com/okex/exchain/app"
-	"github.com/okex/exchain/app/codec"
-	"github.com/ontio/ontology/smartcontract/service/native/cross_chain/cross_chain_manager"
 	"github.com/polynetwork/okex-relayer/config"
 	"github.com/polynetwork/okex-relayer/pkg/db"
 	"github.com/polynetwork/okex-relayer/pkg/eccm_abi"
@@ -30,8 +30,10 @@ import (
 	"github.com/polynetwork/poly/common"
 	common2 "github.com/polynetwork/poly/native/service/cross_chain_manager/common"
 	"github.com/polynetwork/poly/native/service/cross_chain_manager/eth"
+	"github.com/polynetwork/poly/native/service/cross_chain_manager/okex"
 	mhcomm "github.com/polynetwork/poly/native/service/header_sync/common"
 	"github.com/polynetwork/poly/native/service/header_sync/cosmos"
+	okex2 "github.com/polynetwork/poly/native/service/header_sync/okex"
 	"github.com/polynetwork/poly/native/service/utils"
 	autils "github.com/polynetwork/poly/native/service/utils"
 	"github.com/tendermint/tendermint/crypto/merkle"
@@ -100,7 +102,7 @@ func (this *CrossTransfer) Deserialization(source *common.ZeroCopySource) error 
 
 // NewOKEx ...
 func NewOKEx(conf *config.Config, syncedOKHeight int64, polySigner *sdk.Account, polySdk *sdk.PolySdk, ethClients []*ethclient.Client, tmClients []*oksdk.Client, db *db.BoltDB) *OK {
-	cdc := codec.MakeCodec(app.ModuleBasics)
+	cdc := okex2.NewCDC()
 
 	ok := &OK{
 		conf:           conf,
@@ -289,7 +291,7 @@ func (ok *OK) fetchLockDepositEvents(height uint64) bool {
 		param := &common2.MakeTxParam{}
 		_ = param.Deserialization(common.NewZeroCopySource([]byte(evt.Rawdata)))
 		raw, _ := ok.polySdk.GetStorage(autils.CrossChainManagerContractAddress.ToHexString(),
-			append(append([]byte(cross_chain_manager.DONE_TX), autils.GetUint64Bytes(ok.conf.OKConfig.SideChainId)...), param.CrossChainID...))
+			append(append([]byte(common2.DONE_TX), autils.GetUint64Bytes(ok.conf.OKConfig.SideChainId)...), param.CrossChainID...))
 		if len(raw) != 0 {
 			log.Infof("fetchLockDepositEvents - ccid %s (tx_hash: %s) already on poly",
 				hex.EncodeToString(param.CrossChainID), evt.Raw.TxHash.Hex())
@@ -359,19 +361,6 @@ func (ok *OK) MonitorDeposit() {
 			log.Errorf("handleLockDepositEvents error: %v", err)
 		}
 	}
-}
-
-// CosmosProofValue ...
-type CosmosProofValue struct {
-	Kp    string
-	Value []byte
-}
-
-// CosmosHeader ...
-type CosmosHeader struct {
-	Header  types.Header
-	Commit  *types.Commit
-	Valsets []*types.Validator
 }
 
 func (ok *OK) handleLockDepositEvents(refHeight int64) error {
@@ -445,7 +434,7 @@ func (ok *OK) handleLockDepositEvents(refHeight int64) error {
 			log.Errorf("handleLockDepositEvents - getValidators on height :%d failed:%v", height, err)
 			continue
 		}
-		hdr := cosmos.CosmosHeader{
+		hdr := okex2.CosmosHeader{
 			Header:  *cr.Header,
 			Commit:  cr.Commit,
 			Valsets: vSet,
@@ -458,8 +447,23 @@ func (ok *OK) handleLockDepositEvents(refHeight int64) error {
 
 		//3. commit proof to poly
 
-		txData, _ := ok.cdc.MarshalBinaryBare(&CosmosProofValue{Kp: keyPath, Value: crosstx.value})
-		txHash, err := ok.polySdk.Native.Ccm.ImportOuterTransfer(ok.conf.OKConfig.SideChainId, txData, uint32(height+1), proof, ok.polySigner.Address[:], raw, ok.polySigner)
+		storageProof, _ := ok.cdc.MarshalBinaryBare(mproof)
+
+		if !bytes.Equal(okProof.StorageProofs[0].Value.ToInt().Bytes(), crypto.Keccak256(crosstx.value)) {
+			panic("Keccak256 not match")
+		} else {
+			fmt.Println("Keccak256 matches")
+		}
+
+		prt := rootmulti.DefaultProofRuntime()
+
+		err = prt.VerifyValue(&mproof, cr.AppHash, keyPath, ethcrypto.Keccak256(crosstx.value))
+		if err != nil {
+			log.Fatalf("VerifyValue error: %v proof_height:%d commit_height:%d", err, height, cr.Header.Height)
+		}
+
+		txData, _ := ok.cdc.MarshalBinaryBare(&okex.CosmosProofValue{Kp: keyPath, Value: crosstx.value})
+		txHash, err := ok.polySdk.Native.Ccm.ImportOuterTransfer(ok.conf.OKConfig.SideChainId, txData, uint32(height+1), storageProof, ok.polySigner.Address[:], raw, ok.polySigner)
 		if err != nil {
 			if strings.Contains(err.Error(), "tx already done") {
 				log.Infof("handleLockDepositEvents - ok_tx %s already on poly", ethcommon.BytesToHash(crosstx.txId).String())

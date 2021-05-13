@@ -13,6 +13,7 @@ import (
 	"strings"
 
 	"github.com/btcsuite/btcd/btcec"
+	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ontio/ontology-crypto/ec"
 	"github.com/ontio/ontology-crypto/keypair"
@@ -58,9 +59,9 @@ type ETHProof struct {
 }
 
 type StorageProof struct {
-	Key   string   `json:"key"`
-	Value string   `json:"value"`
-	Proof []string `json:"proof"`
+	Key   string       `json:"key"`
+	Value *hexutil.Big `json:"value"`
+	Proof []string     `json:"proof"`
 }
 
 func jsonRequest(url string, data []byte) (result []byte, err error) {
