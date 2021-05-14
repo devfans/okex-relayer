@@ -148,9 +148,10 @@ func (ok *OK) MonitorChain() {
 			continue
 		}
 
+		latestheightU64--
 		latestheight := int64(latestheightU64)
-		if latestheight-ok.syncedOKHeight <= ok.conf.OKConfig.BlockConfig {
-			log.Infof("OKManager MonitorChain - latestheight(%d) - syncedOKHeight(%d) < OKConfig.BlockConfig(%d)", latestheight, ok.syncedOKHeight, ok.conf.OKConfig.BlockConfig)
+		if ok.syncedOKHeight >= latestheight-ok.conf.OKConfig.BlockConfig {
+			log.Infof("OKManager MonitorChain - syncedOKHeight(%d) >= latestheight(%d) - OKConfig.BlockConfig(%d), wait...", ok.syncedOKHeight, latestheight, ok.conf.OKConfig.BlockConfig)
 			time.Sleep(time.Second)
 			continue
 		}
