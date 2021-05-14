@@ -475,7 +475,7 @@ func (ok *OK) handleLockDepositEvents(refHeight int64) error {
 
 		//3. commit proof to poly
 
-		if !CheckProofResult(okProof.StorageProofs[0].Value.ToInt().Bytes(), crypto.Keccak256(crosstx.value)) {
+		if !CheckProofResult(okProof.StorageProofs[0].Value.ToInt().Bytes(), crosstx.value) {
 			panic(fmt.Sprintf("Keccak256 not match storage(%x) vs event(%x)", okProof.StorageProofs[0].Value.ToInt().Bytes(), crypto.Keccak256(crosstx.value)))
 		}
 		if len(mproof.Ops) != 2 {
