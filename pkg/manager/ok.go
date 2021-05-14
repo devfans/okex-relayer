@@ -19,6 +19,7 @@ import (
 	"github.com/ethereum/go-ethereum/crypto"
 	ethcrypto "github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
+	"github.com/ethereum/go-ethereum/rlp"
 	proto "github.com/gogo/protobuf/proto"
 	oksdk "github.com/okex/exchain-go-sdk"
 	"github.com/polynetwork/okex-relayer/config"
@@ -373,6 +374,23 @@ var (
 	KeyPrefixStorage = []byte{0x05}
 )
 
+func CheckProofResult(result, value []byte) bool {
+	var s_temp []byte
+	err := rlp.DecodeBytes(result, &s_temp)
+	if err != nil {
+		log.Errorf("checkProofResult, rlp.DecodeBytes error:%s\n", err)
+		return false
+	}
+	//
+	var s []byte
+	for i := len(s_temp); i < 32; i++ {
+		s = append(s, 0)
+	}
+	s = append(s, s_temp...)
+	hash := crypto.Keccak256(value)
+	return bytes.Equal(s, hash)
+}
+
 func (ok *OK) handleLockDepositEvents(refHeight int64) error {
 	retryList, err := ok.db.GetAllRetry()
 	if err != nil {
@@ -457,8 +475,8 @@ func (ok *OK) handleLockDepositEvents(refHeight int64) error {
 
 		//3. commit proof to poly
 
-		if !bytes.Equal(okProof.StorageProofs[0].Value.ToInt().Bytes(), crypto.Keccak256(crosstx.value)) {
-			panic("Keccak256 not match")
+		if !CheckProofResult(okProof.StorageProofs[0].Value.ToInt().Bytes(), crypto.Keccak256(crosstx.value)) {
+			panic(fmt.Sprintf("Keccak256 not match storage(%x) vs event(%x)", okProof.StorageProofs[0].Value.ToInt().Bytes(), crypto.Keccak256(crosstx.value)))
 		}
 		if len(mproof.Ops) != 2 {
 			panic("proof size wrong")
