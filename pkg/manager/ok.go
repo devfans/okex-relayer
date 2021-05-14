@@ -368,6 +368,10 @@ func (ok *OK) MonitorDeposit() {
 	}
 }
 
+var (
+	KeyPrefixStorage = []byte{0x05}
+)
+
 func (ok *OK) handleLockDepositEvents(refHeight int64) error {
 	retryList, err := ok.db.GetAllRetry()
 	if err != nil {
@@ -454,8 +458,19 @@ func (ok *OK) handleLockDepositEvents(refHeight int64) error {
 
 		if !bytes.Equal(okProof.StorageProofs[0].Value.ToInt().Bytes(), crypto.Keccak256(crosstx.value)) {
 			panic("Keccak256 not match")
-		} else {
-			fmt.Println("Keccak256 matches")
+		}
+		if len(mproof.Ops[0].Key) != 1+ethcommon.HashLength+ethcommon.AddressLength {
+			panic("storage key length not correct")
+		}
+		eccd, err := hex.DecodeString(strings.Replace(ok.conf.OKConfig.ECCDContractAddress, "0x", "", 1))
+		if err != nil {
+			panic(fmt.Sprintf("ECCDContractAddress decode fail:%v", err))
+		}
+		if !bytes.HasPrefix(mproof.Ops[0].Key, append(KeyPrefixStorage, eccd...)) {
+			panic("storage key not from ccmc")
+		}
+		if !bytes.Equal(mproof.Ops[1].Key, []byte("evm")) {
+			panic("wrong module for proof")
 		}
 
 		prt := rootmulti.DefaultProofRuntime()
