@@ -510,7 +510,7 @@ func (ok *OK) handleLockDepositEvents(refHeight int64) error {
 			log.Errorf("handleLockDepositEvents - ok.db.PutCheck error: %v", err)
 		}
 
-		log.Infof("handleLockDepositEvents - syncProofToAlia txHash is %s", txHash.ToHexString())
+		log.Infof("handleLockDepositEvents - syncProofToAlia (ok_hash %s poly_hash %s) ", ethcommon.BytesToHash(crosstx.txId).Hex(), txHash.ToHexString())
 	}
 
 	return nil
