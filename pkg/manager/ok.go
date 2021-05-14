@@ -459,6 +459,9 @@ func (ok *OK) handleLockDepositEvents(refHeight int64) error {
 		if !bytes.Equal(okProof.StorageProofs[0].Value.ToInt().Bytes(), crypto.Keccak256(crosstx.value)) {
 			panic("Keccak256 not match")
 		}
+		if len(mproof.Ops) != 2 {
+			panic("proof size wrong")
+		}
 		if len(mproof.Ops[0].Key) != 1+ethcommon.HashLength+ethcommon.AddressLength {
 			panic("storage key length not correct")
 		}
