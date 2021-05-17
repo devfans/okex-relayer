@@ -72,7 +72,7 @@ func (p *Poly) findLatestHeight() uint32 {
 	for {
 		height, err := p.eccdInstance.GetCurEpochStartHeight(nil)
 		if err != nil {
-			log.Infof("PolyManager findLatestHeight - GetCurEpochStartHeight failed:%v", err)
+			log.Errorf("PolyManager findLatestHeight - GetCurEpochStartHeight failed:%v", err)
 			time.Sleep(time.Second)
 			continue
 		}
