@@ -480,20 +480,25 @@ func (ok *OK) handleLockDepositEvents(refHeight int64) error {
 		// 	panic(fmt.Sprintf("Keccak256 not match storage(%x) vs event(%x)", okProof.StorageProofs[0].Value.ToInt().Bytes(), crypto.Keccak256(crosstx.value)))
 		// }
 		if len(mproof.Ops) != 2 {
-			panic("proof size wrong")
+			log.Errorf("txId(%s) proof size(%d) wrong, proof:%s height:%d key:%s", hex.EncodeToString(crosstx.txId), len(mproof.Ops), hex.EncodeToString([]byte(okProof.StorageProofs[0].Proof[0])), height, key)
+			continue
 		}
 		if len(mproof.Ops[0].Key) != 1+ethcommon.HashLength+ethcommon.AddressLength {
-			panic("storage key length not correct")
+			log.Errorf("storage key length not correct")
+			continue
 		}
 		eccd, err := hex.DecodeString(strings.Replace(ok.conf.OKConfig.ECCDContractAddress, "0x", "", 1))
 		if err != nil {
-			panic(fmt.Sprintf("ECCDContractAddress decode fail:%v", err))
+			log.Errorf("ECCDContractAddress decode fail:%v", err)
+			continue
 		}
 		if !bytes.HasPrefix(mproof.Ops[0].Key, append(KeyPrefixStorage, eccd...)) {
-			panic("storage key not from ccmc")
+			log.Errorf("storage key not from ccmc")
+			continue
 		}
 		if !bytes.Equal(mproof.Ops[1].Key, []byte("evm")) {
-			panic("wrong module for proof")
+			log.Errorf("wrong module for proof")
+			continue
 		}
 
 		prt := rootmulti.DefaultProofRuntime()
