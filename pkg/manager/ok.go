@@ -181,11 +181,12 @@ func (ok *OK) handleNewBlock(height int64) bool {
 		return false
 	}
 
-	ret = ok.fetchLockDepositEvents(uint64(height))
-	if !ret {
-		log.Errorf("handleNewBlock - fetchLockDepositEvents on height :%d failed", height)
-		return false
-	}
+	go func() {
+		ret := ok.fetchLockDepositEvents(uint64(height))
+		if !ret {
+			log.Errorf("handleNewBlock - fetchLockDepositEvents on height :%d failed", height)
+		}
+	}()
 
 	return true
 }
