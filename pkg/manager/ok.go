@@ -415,6 +415,7 @@ func (ok *OK) handleLockDepositEvents(refHeight int64) error {
 			continue
 		}
 		if refHeight <= int64(crosstx.height)+ok.conf.OKConfig.BlockConfig {
+			log.Infof("refHeight[%d]<=int64(crosstx.height[%d])+ok.conf.OKConfig.BlockConfig[%d]", refHeight, crosstx.height, ok.conf.OKConfig.BlockConfig)
 			continue
 		}
 		height := int64(refHeight - ok.conf.OKConfig.BlockConfig)
@@ -538,6 +539,7 @@ func (ok *OK) handleLockDepositEvents(refHeight int64) error {
 		log.Infof("handleLockDepositEvents - syncProofToAlia (ok_hash %s poly_hash %s) ", ethcommon.BytesToHash(crosstx.txId).Hex(), txHash.ToHexString())
 	}
 
+	log.Infof("handleLockDepositEvents done for height %d", refHeight)
 	return nil
 }
 
