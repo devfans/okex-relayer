@@ -422,7 +422,8 @@ func (ok *OK) handleLockDepositEvents(refHeight int64) error {
 		proofKey := hexutil.Encode(keyBytes)
 
 		//2. get proof
-		proof, err := tools.GetProof(ok.conf.OKConfig.RandRestURL(), ok.conf.OKConfig.ECCDContractAddress, proofKey, heightHex)
+		url := ok.conf.OKConfig.RandRestURL()
+		proof, err := tools.GetProof(url, ok.conf.OKConfig.ECCDContractAddress, proofKey, heightHex)
 		if err != nil {
 			log.Errorf("handleLockDepositEvents - error :%v", err)
 			continue
@@ -480,7 +481,7 @@ func (ok *OK) handleLockDepositEvents(refHeight int64) error {
 		// 	panic(fmt.Sprintf("Keccak256 not match storage(%x) vs event(%x)", okProof.StorageProofs[0].Value.ToInt().Bytes(), crypto.Keccak256(crosstx.value)))
 		// }
 		if len(mproof.Ops) != 2 {
-			log.Errorf("txId(%s) proof size(%d) wrong, proof:%s height:%d key:%s", hex.EncodeToString(crosstx.txId), len(mproof.Ops), hex.EncodeToString([]byte(okProof.StorageProofs[0].Proof[0])), height, key)
+			log.Errorf("txId(%s) proof size(%d) wrong, proof:%s height:%d key:%s url:%s", hex.EncodeToString(crosstx.txId), len(mproof.Ops), hex.EncodeToString([]byte(okProof.StorageProofs[0].Proof[0])), height, key, url)
 			continue
 		}
 		if len(mproof.Ops[0].Key) != 1+ethcommon.HashLength+ethcommon.AddressLength {
