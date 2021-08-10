@@ -220,6 +220,11 @@ func (this *Poly) handleDepositEvents(height uint32) bool {
 					continue
 				}
 
+				if param.MakeTxParam.Method != "unlock" {
+					log.Errorf("Invalid target contract method %s", param.MakeTxParam.Method)
+					continue
+				}
+
 				if !this.isPaid(param) {
 					log.Infof("%v skipped because not paid", event.TxHash)
 					continue

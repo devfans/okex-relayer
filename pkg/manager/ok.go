@@ -297,7 +297,15 @@ func (ok *OK) fetchLockDepositEvents(height uint64) bool {
 		evt := events.Event
 
 		param := &common2.MakeTxParam{}
-		_ = param.Deserialization(common.NewZeroCopySource([]byte(evt.Rawdata)))
+		err = param.Deserialization(common.NewZeroCopySource([]byte(evt.Rawdata)))
+		if err != nil {
+			log.Errorf("param.Deserialization error %v", err)
+			continue
+		}
+		if param.Method != "unlock" {
+			log.Errorf("target contract method invalid %s", param.Method)
+			continue
+		}
 		raw, _ := ok.polySdk.GetStorage(autils.CrossChainManagerContractAddress.ToHexString(),
 			append(append([]byte(common2.DONE_TX), autils.GetUint64Bytes(ok.conf.OKConfig.SideChainId)...), param.CrossChainID...))
 		if len(raw) != 0 {
