@@ -35,6 +35,17 @@ import (
 	polytypes "github.com/polynetwork/poly/core/types"
 )
 
+var METHODS = map[string]bool{
+	"add":             true,
+	"remove":          true,
+	"swap":            true,
+	"unlock":          true,
+	"addExtension":    true,
+	"removeExtension": true,
+	"registerAsset":   true,
+	"onCrossTransfer": true,
+}
+
 // Poly ...
 type Poly struct {
 	conf             *config.Config
@@ -220,8 +231,8 @@ func (this *Poly) handleDepositEvents(height uint32) bool {
 					continue
 				}
 
-				if param.MakeTxParam.Method != "unlock" {
-					log.Errorf("Invalid target contract method %s", param.MakeTxParam.Method)
+				if !METHODS[param.MakeTxParam.Method] {
+					log.Errorf("Invalid target contract method %s %s", param.MakeTxParam.Method, event.TxHash)
 					continue
 				}
 
