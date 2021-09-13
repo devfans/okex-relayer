@@ -35,6 +35,13 @@ import (
 	polytypes "github.com/polynetwork/poly/core/types"
 )
 
+func CheckGasLimit(hash string, limit uint64) error {
+	if limit > 300000 {
+		return fmt.Errorf("Skipping poly tx %s for gas limit too high %d ", hash, limit)
+	}
+	return nil
+}
+
 var METHODS = map[string]bool{
 	"add":             true,
 	"remove":          true,
@@ -461,6 +468,13 @@ func (p *Poly) commitDepositEventsWithHeader(account accounts.Account, header *p
 	gasLimit, err := ethClient.EstimateGas(context.Background(), callMsg)
 	if err != nil {
 		log.Errorf("commitDepositEventsWithHeader - estimate gas limit error: %s", err.Error())
+		return true
+	}
+
+	// Check gas limit
+	gasLimit = uint64(float32(gasLimit) * 1.1)
+	if e := CheckGasLimit(polyTxHash, gasLimit); e != nil {
+		log.Errorf("Skipped poly tx %s for gas limit too high %v", polyTxHash, gasLimit)
 		return true
 	}
 
