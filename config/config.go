@@ -4,9 +4,11 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"math/rand"
+	"time"
 )
 
 const (
+	OK_MONITOR_INTERVAL  = time.Second
 	ONT_USEFUL_BLOCK_NUM = 1
 )
 
