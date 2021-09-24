@@ -318,7 +318,39 @@ func (p *Poly) isEpoch(hdr *polytypes.Header) (bool, []byte, error) {
 }
 
 func (p *Poly) isPaid(param *common2.ToMerkleValue) bool {
-	return true
+	c := 0
+	for {
+		txHash := hex.EncodeToString(param.MakeTxParam.TxHash)
+		req := &poly_bridge_sdk.CheckFeeReq{Hash: txHash, ChainId: param.FromChainID}
+		resp, err := p.bridgeSdk.CheckFee([]*poly_bridge_sdk.CheckFeeReq{req})
+		if err != nil {
+			log.Errorf("CheckFee failed:%v, TxHash:%s FromChainID:%d", err, txHash, param.FromChainID)
+			time.Sleep(time.Second)
+			continue
+		}
+		if len(resp) != 1 {
+			log.Errorf("CheckFee resp invalid, length %d, TxHash:%s FromChainID:%d", len(resp), txHash, param.FromChainID)
+			time.Sleep(time.Second)
+			continue
+		}
+
+		switch resp[0].PayState {
+		case poly_bridge_sdk.STATE_HASPAY:
+			return true
+		case poly_bridge_sdk.STATE_NOTPAY:
+			return false
+		case -2:
+			return false
+		case poly_bridge_sdk.STATE_NOTCHECK:
+			c++
+			log.Errorf("CheckFee STATE_NOTCHECK, TxHash:%s FromChainID:%d, wait...", txHash, param.FromChainID)
+			time.Sleep(time.Second)
+			if c > 10 {
+				return false
+			}
+			continue
+		}
+	}
 }
 
 func randIdx(size int) int {
