@@ -339,6 +339,8 @@ func (p *Poly) isPaid(param *common2.ToMerkleValue) bool {
 			return true
 		case poly_bridge_sdk.STATE_NOTPAY:
 			return false
+		case -2:
+			return false
 		case poly_bridge_sdk.STATE_NOTCHECK:
 			c++
 			log.Errorf("CheckFee STATE_NOTCHECK, TxHash:%s FromChainID:%d, wait...", txHash, param.FromChainID)
