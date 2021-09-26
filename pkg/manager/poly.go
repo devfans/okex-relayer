@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"math/big"
 	"math/rand"
-	"poly_bridge_sdk"
+	poly_bridge_sdk "poly-bridge/bridgesdk"
 	"strings"
 	"time"
 
@@ -58,7 +58,7 @@ type Poly struct {
 	conf             *config.Config
 	polySdk          *sdk.PolySdk
 	ethClients       []*ethclient.Client
-	bridgeSdk        *poly_bridge_sdk.BridgeFeeCheck
+	bridgeSdk        *poly_bridge_sdk.BridgeSdk
 	contractAbi      *abi.ABI
 	ks               *tools.EthKeyStore
 	db               *db.BoltDB
@@ -68,7 +68,7 @@ type Poly struct {
 }
 
 // NewPoly ...
-func NewPoly(conf *config.Config, syncedPolyHeight uint32, polySdk *sdk.PolySdk, ethClients []*ethclient.Client, ks *tools.EthKeyStore, db *db.BoltDB, bridgeSdk *poly_bridge_sdk.BridgeFeeCheck) *Poly {
+func NewPoly(conf *config.Config, syncedPolyHeight uint32, polySdk *sdk.PolySdk, ethClients []*ethclient.Client, ks *tools.EthKeyStore, db *db.BoltDB, bridgeSdk *poly_bridge_sdk.BridgeSdk) *Poly {
 	contractAbi, err := abi.JSON(strings.NewReader(eccm_abi.EthCrossChainManagerABI))
 	if err != nil {
 		log.Fatalf("abi.JSON failed:%v", err)
@@ -339,7 +339,8 @@ func (p *Poly) isPaid(param *common2.ToMerkleValue) bool {
 			return true
 		case poly_bridge_sdk.STATE_NOTPAY:
 			return false
-		case -2:
+		case poly_bridge_sdk.STATE_NOTPOLYPROXY:
+			log.Info("txHash:%s STATE_NOTPOLYPROXY", txHash)
 			return false
 		case poly_bridge_sdk.STATE_NOTCHECK:
 			c++
