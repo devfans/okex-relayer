@@ -9,7 +9,7 @@ import (
 	"syscall"
 	"time"
 
-	"poly_bridge_sdk"
+	poly_bridge_sdk "github.com/polynetwork/poly-bridge/bridgesdk"
 
 	"github.com/ethereum/go-ethereum/ethclient"
 	oksdk "github.com/okex/exchain-go-sdk"
@@ -110,7 +110,7 @@ func main() {
 		return
 	}
 
-	bridgeSdk := poly_bridge_sdk.NewBridgeFeeCheck(conf.BridgeConfig.RestURL, 5)
+	bridgeSdk := poly_bridge_sdk.NewBridgeSdk(conf.BridgeConfig.RestURL[0][0])
 
 	polyMgr := manager.NewPoly(conf, uint32(syncedPolyHeight), polySdk, ethClients, ks, boltDB, bridgeSdk)
 
