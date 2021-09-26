@@ -9,7 +9,7 @@ import (
 	"syscall"
 	"time"
 
-	poly_bridge_sdk "poly-bridge/bridgesdk"
+	poly_bridge_sdk "github.com/polynetwork/poly-bridge/bridgesdk"
 
 	"github.com/ethereum/go-ethereum/ethclient"
 	oksdk "github.com/okex/exchain-go-sdk"

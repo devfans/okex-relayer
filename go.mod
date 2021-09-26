@@ -11,9 +11,9 @@ require (
 	github.com/okex/exchain-go-sdk v0.18.0
 	github.com/ontio/ontology-crypto v1.0.9
 	github.com/polynetwork/poly v1.4.0
+	github.com/polynetwork/poly-bridge/bridgesdk v0.0.2
 	github.com/polynetwork/poly-go-sdk v0.0.0-20210114035303-84e1615f4ad4
 	github.com/tendermint/tendermint v0.33.9
-	poly-bridge v0.0.1
 )
 
 replace (
@@ -22,5 +22,4 @@ replace (
 	github.com/polynetwork/poly => github.com/zhiqiangxu/poly v0.0.0-20210512064417-e8c8ac7678d4
 	github.com/tendermint/iavl => github.com/okex/iavl v0.14.3-exchain
 	github.com/tendermint/tendermint => github.com/okex/tendermint v0.33.9-exchain2
-	poly-bridge => github.com/polynetwork/poly-bridge v1.0.1-0.20210924034233-ace09e709658
 )

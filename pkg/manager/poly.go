@@ -6,9 +6,9 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	poly_bridge_sdk "github.com/polynetwork/poly-bridge/bridgesdk"
 	"math/big"
 	"math/rand"
-	poly_bridge_sdk "poly-bridge/bridgesdk"
 	"strings"
 	"time"
 
