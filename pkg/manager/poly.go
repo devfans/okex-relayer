@@ -36,7 +36,7 @@ import (
 )
 
 func CheckGasLimit(hash string, limit uint64) error {
-	if limit > 300000 {
+	if limit > 500000 {
 		return fmt.Errorf("Skipping poly tx %s for gas limit too high %d ", hash, limit)
 	}
 	return nil
