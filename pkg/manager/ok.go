@@ -50,6 +50,7 @@ type OK struct {
 	ethClients     []*ethclient.Client
 	tmClients      []*oksdk.Client
 	db             *db.BoltDB
+	exitChan       chan int
 	header4sync    [][]byte
 	crosstx4sync   []*CrossTransfer
 	cdc            *amcodec.Codec
@@ -107,6 +108,7 @@ func NewOKEx(conf *config.Config, syncedOKHeight int64, polySigner *sdk.Account,
 
 	ok := &OK{
 		conf:           conf,
+		exitChan:       make(chan int),
 		syncedOKHeight: syncedOKHeight,
 		polySdk:        polySdk,
 		polySigner:     polySigner,
@@ -356,25 +358,31 @@ func (ok *OK) findLastestEpochHeight() int64 {
 }
 
 func (ok *OK) MonitorDeposit() {
+	monitorTicker := time.NewTicker(config.OK_MONITOR_INTERVAL)
 	for {
-		ethClient := ok.ethClients[randIdx(len(ok.ethClients))]
-		heightU64, err := ethClient.BlockNumber(context.Background())
-		if err != nil {
-			log.Errorf("MonitorDeposit - ethClient.BlockNumber, err: %v", err)
-			time.Sleep(time.Second)
-			continue
-		}
-		height := int64(heightU64)
-		snycheight := atomic.LoadInt64(&ok.syncedOKHeight)
-		if height < snycheight {
-			log.Infof("MonitorDeposit - height(%d) < snycheight(%d)", height, snycheight)
-			time.Sleep(time.Second)
-			continue
-		}
-		log.Info("MonitorDeposit ok - snyced ok height", snycheight, "ok height", height, "diff", height-snycheight)
-		err = ok.handleLockDepositEvents(snycheight)
-		if err != nil {
-			log.Errorf("handleLockDepositEvents error: %v", err)
+		select {
+		case <-monitorTicker.C:
+			ethClient := ok.ethClients[randIdx(len(ok.ethClients))]
+			heightU64, err := ethClient.BlockNumber(context.Background())
+			if err != nil {
+				log.Errorf("MonitorDeposit - ethClient.BlockNumber, err: %v", err)
+				time.Sleep(time.Second)
+				continue
+			}
+			height := int64(heightU64)
+			snycheight := atomic.LoadInt64(&ok.syncedOKHeight)
+			if height < snycheight {
+				log.Infof("MonitorDeposit - height(%d) < snycheight(%d)", height, snycheight)
+				time.Sleep(time.Second)
+				continue
+			}
+			log.Info("MonitorDeposit ok - snyced ok height", snycheight, "ok height", height, "diff", height-snycheight)
+			err = ok.handleLockDepositEvents(snycheight)
+			if err != nil {
+				log.Errorf("handleLockDepositEvents error: %v", err)
+			}
+		case <-ok.exitChan:
+			return
 		}
 	}
 }

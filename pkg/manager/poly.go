@@ -35,7 +35,7 @@ import (
 	polytypes "github.com/polynetwork/poly/core/types"
 )
 
-const MaxGasLimit = uint64(350000)
+const MaxGasLimit = uint64(450000)
 
 func CheckGasLimit(hash string, limit uint64) error {
 	if limit > MaxGasLimit {
